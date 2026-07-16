@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Executable files
+main
+*.out
+
+# Debug files
+*.dSYM/
+
+# VS Code
+.vscode/
