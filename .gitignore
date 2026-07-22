@@ -3,10 +3,9 @@
 
 # Executable files
 main
-*.out
 
 # Debug files
-*.dSYM/
+*.dSYM
 
 # VS Code
 .vscode/

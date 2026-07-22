@@ -11,6 +11,7 @@ int main(void)
     *p = 100;
 
     printf("%p\n", &speed);
+    printf("Address : %p\n", (void*)&speed);
 
 
     return 0;

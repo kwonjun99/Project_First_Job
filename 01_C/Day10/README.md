@@ -7,7 +7,7 @@ Learn the basics of pointers.
 ## Learned
 
 - Pointer
-- Address
+- Address (&)
 - Dereference
 - *
 
