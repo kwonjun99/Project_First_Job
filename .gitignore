@@ -9,3 +9,6 @@ main
 
 # VS Code
 .vscode/
+
+# Object files
+*.o
