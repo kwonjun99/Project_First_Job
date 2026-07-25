@@ -12,3 +12,9 @@ main
 
 # Object files
 *.o
+
+# MATLAB / Simulink
+slprj/
+*.autosave
+*.asv
+*.mex*
