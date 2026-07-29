@@ -70,7 +70,24 @@ DBC를 통해
 - 조향각(Steering Angle)
 
 등을 실시간으로 확인할 수 있다.
+DBC예시
+Signal Name : Engine Speed
 
+CAN ID      : 0x100
+
+Start Bit   : 0
+
+Length       : 16 bit
+
+Scaling      : 0.25
+
+Offset       : 0
+
+Unit         : rpm
+
+Sender ECU   : Engine ECU
+
+Receiver ECU : Cluster ECU
 ---
 
 ## 오늘 배운 내용
