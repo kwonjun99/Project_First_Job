@@ -132,3 +132,8 @@ Driver Target Speed
 ## 결과
 
 거리 조건에 따라 목표 속도가 자동으로 변경되는 기본 ACC 판단 로직을 구현하였다.
+
+Feature4
+
+Signal Editor를 이용하여 앞차 거리가
+시간에 따라 변하는 시나리오를 구현하였다.
