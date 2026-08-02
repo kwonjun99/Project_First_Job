@@ -150,10 +150,18 @@ Vehicle_Speed
 
 또한 Target Speed와 Vehicle Speed를 각각 Scope에서 확인할 수 있도록 구성하였다.
 
-Feature6
+## Feature 6
 
-차량 속도를 적분하여
-차량 위치를 계산하였다.
+### PID Tuning
 
-앞차 위치와 내 차량 위치의 차이를
-상대거리로 계산하였다.
+P Controller에서 PI Controller로 변경하였다.
+
+P = 0.8
+
+I = 0.2
+
+D = 0
+
+Vehicle Speed가 보다 부드럽게 목표속도에 수렴하도록 개선하였다.
+
+또한 Mux를 이용하여 Target Speed와 Vehicle Speed를 하나의 Scope에서 비교하였다.
