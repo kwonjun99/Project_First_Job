@@ -137,3 +137,8 @@ Feature4
 
 Signal Editor를 이용하여 앞차 거리가
 시간에 따라 변하는 시나리오를 구현하였다.
+
+#Feature5
+
+PID 출력에 Saturation을 적용하여
+실제 차량처럼 가속/감속 제한을 구현하였다.
