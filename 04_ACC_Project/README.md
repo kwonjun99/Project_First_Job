@@ -138,10 +138,17 @@ Feature4
 Signal Editor를 이용하여 앞차 거리가
 시간에 따라 변하는 시나리오를 구현하였다.
 
-#Feature5
+## Feature 5
 
-PID 출력에 Saturation을 적용하여
-실제 차량처럼 가속/감속 제한을 구현하였다.
+### Signal Naming
+
+프로젝트의 가독성을 높이기 위해 주요 신호 이름을 지정하였다.
+
+Target_Speed
+
+Vehicle_Speed
+
+또한 Target Speed와 Vehicle Speed를 각각 Scope에서 확인할 수 있도록 구성하였다.
 
 Feature6
 
