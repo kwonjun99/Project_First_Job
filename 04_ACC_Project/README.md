@@ -96,3 +96,39 @@ Switch 아래
 ## 결과
 
 ACC가 운전자 속도와 앞차 속도 중 하나를 선택할 수 있는 기본 구조를 완성하였다.
+
+# Feature 3 - Distance Decision Logic
+
+## 목표
+
+앞차와의 거리를 이용하여 목표 속도를 자동으로 변경하도록 구현하였다.
+
+---
+
+## 사용 블록
+
+- Constant (Distance)
+- Compare To Constant
+- Switch
+
+---
+
+## 조건
+
+Distance < 30m
+
+↓
+
+Lead Vehicle Speed
+
+Distance ≥ 30m
+
+↓
+
+Driver Target Speed
+
+---
+
+## 결과
+
+거리 조건에 따라 목표 속도가 자동으로 변경되는 기본 ACC 판단 로직을 구현하였다.
