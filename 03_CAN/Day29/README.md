@@ -49,6 +49,24 @@ ECU는 Vehicle Speed를 100 km/h로 정상 송신한다.
 조치
 
 ---
+현상
+
+ACK Error 없음
+
+CRC Error 없음
+
+Speed = 정상
+
+Cluster = 0 km/h
+
+->
+원인
+
+Cluster 오류
+
+조치
+
+Cluster CAN ID 설정, DBC, Software 확인
 
 ## 오늘 배운 내용
 
