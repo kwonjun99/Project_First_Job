@@ -350,3 +350,53 @@ Ego Position Scope
 ↓
 
 차량 위치가 시간에 따라 계속 증가하는 것을 확인
+
+# Feature 12
+
+## Lead Vehicle Position Calculation
+
+### 목적
+
+앞차의 위치를 계산하기 위해 Lead Vehicle Speed를 적분하였다.
+
+이를 통해 Ego Vehicle과 Lead Vehicle의 실제 상대거리를 계산할 준비를 완료하였다.
+
+---
+
+### 구성
+
+Lead Vehicle Speed
+
+↓
+
+Integrator
+
+↓
+
+Lead_Position
+
+↓
+
+Scope
+
+---
+
+### 원리
+
+Lead Vehicle의 속도를 적분하여 위치를 계산하였다.
+
+Lead Position = ∫ Lead Speed dt
+
+다음 Feature에서는
+
+Actual Distance
+
+=
+
+Lead Position
+
+-
+
+Ego Position
+
+을 구현할 예정이다.
