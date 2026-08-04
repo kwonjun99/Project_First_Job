@@ -300,3 +300,53 @@ ACC ON
 를 자동으로 선택하도록 구현하였다.
 
 이로써 운전자 입력 없이 ACC 상태에 따라 목표속도가 자동으로 변경된다.
+
+# Feature 11
+
+## Ego Vehicle Position Calculation
+
+### 목적
+
+Adaptive Cruise Control은 단순히 속도만 제어하는 시스템이 아니라 차량의 위치를 기반으로 앞차와의 상대거리를 계산한다.
+
+이번 Feature에서는 Ego Vehicle(자차)의 위치를 계산하였다.
+
+---
+
+### 구성
+
+Vehicle_Speed
+
+↓
+
+Integrator
+
+↓
+
+Ego_Position
+
+---
+
+### 동작원리
+
+차량 속도를 적분하면 이동거리가 계산된다.
+
+Position = ∫ Velocity dt
+
+이를 이용하여 자차의 위치(Ego Position)를 계산하였다.
+
+---
+
+### 확인
+
+Vehicle Speed Scope
+
+↓
+
+속도 확인
+
+Ego Position Scope
+
+↓
+
+차량 위치가 시간에 따라 계속 증가하는 것을 확인
