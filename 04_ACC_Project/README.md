@@ -232,3 +232,71 @@ ACC_ON
 상태를 설계하였다.
 
 현재는 Manual Switch가 동작하지만 다음 단계부터 Stateflow가 이를 대신하게 된다.
+
+# Feature 9
+
+## Stateflow 기반 ACC 상태 제어
+
+### 목적
+
+기존에는 Manual Switch를 직접 클릭하여 ACC를 ON/OFF하였다.
+
+실제 차량에서는 운전자 입력과 브레이크 입력을 기반으로 ACC가 자동으로 상태를 변경한다.
+
+이를 위해 Stateflow를 추가하였다.
+
+---
+
+### 상태
+
+ACC_OFF
+
+ACC_ON
+
+---
+
+### 상태 전이
+
+ACC_Button == 1
+
+↓
+
+ACC_ON
+
+Brake == 1
+
+↓
+
+ACC_OFF
+
+---
+
+### 출력
+
+ACC_Enable (Boolean)
+
+ACC_OFF → false
+
+ACC_ON → true
+
+다음 Feature에서는 ACC_Enable을 Manual Switch와 연결하여 자동으로 ACC를 제어할 예정이다.
+
+# Feature 10
+
+## Stateflow와 속도 제어 연결
+
+기존 Manual Switch를 제거하고 일반 Switch를 사용하였다.
+
+Stateflow에서 생성한 ACC_Enable 신호를 이용하여
+
+ACC OFF
+
+→ Driver Target Speed
+
+ACC ON
+
+→ ACC Target Speed
+
+를 자동으로 선택하도록 구현하였다.
+
+이로써 운전자 입력 없이 ACC 상태에 따라 목표속도가 자동으로 변경된다.
