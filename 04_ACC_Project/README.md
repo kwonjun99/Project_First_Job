@@ -165,3 +165,70 @@ D = 0
 Vehicle Speed가 보다 부드럽게 목표속도에 수렴하도록 개선하였다.
 
 또한 Mux를 이용하여 Target Speed와 Vehicle Speed를 하나의 Scope에서 비교하였다.
+
+# Feature 7
+
+## ACC ON / OFF
+
+이번 기능에서는 운전자가 ACC를 사용할지 직접 운전할지를 선택할 수 있도록 Manual Switch를 추가하였다.
+
+### 구성
+
+Distance
+↓
+
+Compare (<30)
+
+↓
+
+Switch
+
+↓
+
+Target_Speed
+
+↓
+
+Manual Switch
+
+↓
+
+Sum
+
+↓
+
+PID
+
+↓
+
+Vehicle
+
+### 동작
+
+- Manual Switch ON
+  - ACC가 계산한 Target Speed 사용
+
+- Manual Switch OFF
+  - Driver Target Speed(100km/h) 사용
+
+이를 통해 ACC 사용 여부를 자유롭게 전환할 수 있도록 구성하였다.
+
+---
+
+# Feature 8
+
+## Stateflow 준비
+
+다음 단계에서는 Manual Switch를 Stateflow가 자동으로 제어하도록 만들 예정이다.
+
+이번 Feature에서는 Stateflow Chart를 생성하고
+
+ACC_OFF
+
+↓
+
+ACC_ON
+
+상태를 설계하였다.
+
+현재는 Manual Switch가 동작하지만 다음 단계부터 Stateflow가 이를 대신하게 된다.
