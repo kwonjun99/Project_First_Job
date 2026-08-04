@@ -400,3 +400,89 @@ Lead Position
 Ego Position
 
 을 구현할 예정이다.
+# Feature 13
+
+## Actual Distance Calculation
+
+### 목적
+
+기존에는 Repeating Sequence를 이용하여
+앞차와의 거리를 가상으로 생성하였다.
+
+이번 Feature에서는
+
+Lead Position
+
+-
+
+Ego Position
+
+을 이용하여 실제 상대거리를 계산하였다.
+
+---
+
+### 구성
+
+Lead Speed
+
+↓
+
+Integrator
+
+↓
+
+Lead Position
+
+↓
+
++
+
+↓
+
+Sum
+
+↓
+
+Actual Distance
+
+↑
+
+-
+
+↓
+
+Ego Position
+
+---
+
+### 계산식
+
+Actual Distance
+
+=
+
+Lead Position
+
+-
+
+Ego Position
+
+---
+
+### 확인
+
+Repeating Sequence
+
+↓
+
+가상거리
+
+Actual Distance
+
+↓
+
+실제 계산거리
+
+두 값을 비교하여
+
+향후 Repeating Sequence를 제거할 준비를 완료하였다.
