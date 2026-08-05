@@ -27,43 +27,78 @@ Kp_d = 0.25;
 Kd_d = 0.8;
 
 %% Acceleration limits
-a_max = 2.0;     % Maximum acceleration [m/s^2]
-a_min = -4.0;    % Maximum braking [m/s^2]
 
-%% Lead vehicle speed scenario
-% 0~10 s  : 22 m/s
-% 10~15 s : 22 -> 15 m/s
-% 15~30 s : 15 m/s
-% 30~35 s : 15 -> 25 m/s
-% 35~45 s : 25 m/s
-% 45~50 s : 25 -> 18 m/s
-% 50~60 s : 18 m/s
+a_max = 2.0;          % 최대 가속도 [m/s^2]
+a_min = -4.0;         % Baseline 모델 최대 감속 [m/s^2]
 
-leadTime = [
-     0
-    10
-    15
-    30
-    35
-    45
-    50
-    60
-];
+a_follow_min = -3.0;  % 일반 ACC 추종 시 최대 감속 [m/s^2]
+a_emergency  = -6.0;  % Emergency 모드 감속 명령 [m/s^2]
 
-leadSpeed = [
-    22
-    22
-    15
-    15
-    25
-    25
-    18
-    18
-];
+%% Lead Vehicle Scenario Selection
+
+scenario_case = 1;
+% 1: Normal ACC scenario
+% 2: Emergency braking scenario
+
+switch scenario_case
+
+    case 1
+        % Normal ACC scenario
+        leadTime = [
+             0
+            10
+            15
+            30
+            35
+            45
+            50
+            60
+        ];
+
+        leadSpeed = [
+            22
+            22
+            15
+            15
+            25
+            25
+            18
+            18
+        ];
+
+    case 2
+        % Emergency braking scenario
+        leadTime = [
+             0
+            10
+            11
+            25
+            60
+        ];
+
+        leadSpeed = [
+            22
+            22
+             5
+             5
+             5
+        ];
+
+    otherwise
+        error("scenario_case는 1 또는 2여야 합니다.");
+end
 
 v_lead_ts = timeseries(leadSpeed, leadTime);
-v_lead_ts.DataInfo.Interpolation = tsdata.interpolation('linear');
+v_lead_ts.DataInfo.Interpolation = ...
+    tsdata.interpolation("linear");
+%% ACC mode-logic parameters
 
-disp("ACC initialization completed.");
-disp("Set speed: " + v_set * 3.6 + " km/h");
-disp("Desired time gap: " + T_gap + " s");
+follow_on_margin  = 5;      % FOLLOWING 진입 여유 거리 [m]
+follow_off_margin = 12;     % CRUISE 복귀 여유 거리 [m]
+
+d_emergency  = 8;           % 비상제동 거리 기준 [m]
+TTC_emergency = 1.5;        % 비상제동 진입 TTC [s]
+TTC_release   = 2.5;        % 비상제동 해제 TTC [s]
+
+a_follow_min = -3.0;        % 일반 추종 최대 감속 [m/s^2]
+a_emergency  = -6.0;        % 비상제동 명령 [m/s^2]

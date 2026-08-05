@@ -227,7 +227,38 @@ The analysis script automatically generates `results/baseline_metrics.csv`.
 - Emergency braking logic has not yet been implemented.
 
 ---
+## ACC Operating Modes
 
+The ACC controller uses three explicit operating modes.
+
+| Mode | Value | Description |
+|---|---:|---|
+| CRUISE | 1 | Tracks the driver-selected cruising speed |
+| FOLLOWING | 2 | Maintains the desired distance from the lead vehicle |
+| EMERGENCY | 3 | Applies emergency braking when distance or TTC becomes critical |
+
+State transitions are determined using relative distance, desired distance,
+and time-to-collision.
+
+### Mode Transition Logic
+
+```text
+CRUISE
+  -> FOLLOWING:
+     d_rel <= d_ref + follow_on_margin
+
+FOLLOWING
+  -> CRUISE:
+     d_rel >= d_ref + follow_off_margin
+
+CRUISE or FOLLOWING
+  -> EMERGENCY:
+     d_rel <= d_emergency
+     OR TTC <= TTC_emergency
+
+EMERGENCY
+  -> FOLLOWING:
+     distance and TTC return to a safe range
 ## 12. Future Work
 
 - Add `CRUISE`, `FOLLOWING`, and `EMERGENCY` mode logic using Stateflow.
