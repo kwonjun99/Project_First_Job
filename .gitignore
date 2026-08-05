@@ -13,8 +13,11 @@ main
 # Object files
 *.o
 
-# MATLAB / Simulink
+# MATLAB / Simulink generated files
 slprj/
+codegen/
+*.slxc
 *.autosave
 *.asv
+*.m~
 *.mex*

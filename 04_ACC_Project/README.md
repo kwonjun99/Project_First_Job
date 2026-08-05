@@ -1,488 +1,238 @@
-# Adaptive Cruise Control Project
+# Adaptive Cruise Control (ACC) Using MATLAB/Simulink
 
-## Feature 1 - Vehicle Speed Control
+## 1. Project Overview
 
-### 목표
+This project implements a baseline Adaptive Cruise Control (ACC) system using MATLAB/Simulink.
 
-PID Controller를 이용하여 차량이 목표 속도(100 km/h)를 추종하도록 구현하였다.
+The controller has two objectives:
 
----
+1. Track the driver-selected cruising speed when the lead vehicle is sufficiently far away.
+2. Maintain a safe following distance when the ego vehicle approaches the lead vehicle.
 
-## 모델 구성
-
-Target Speed
-
-↓
-
-PID Controller
-
-↓
-
-Vehicle Model (Transfer Function)
-
-↓
-
-Vehicle Speed
-
-↓
-
-Feedback
+The final acceleration command is selected conservatively from the speed-control and distance-control commands and is limited by predefined acceleration and braking bounds.
 
 ---
 
-## 사용 블록
+## 2. System Architecture
 
-- Constant
-- Sum
-- PID Controller
-- Transfer Function
-- Scope
+The model consists of the following subsystems:
 
----
+- **Lead Vehicle**: Generates the lead-vehicle speed scenario and integrates speed to obtain longitudinal position.
+- **Ego Vehicle**: Applies the acceleration command and integrates it to obtain ego speed and position.
+- **ACC Controller**: Calculates the desired following distance and generates the longitudinal acceleration command.
+- **Metrics**: Reserved for quantitative performance evaluation.
 
-## 전달함수
+```text
+Lead Vehicle Speed Scenario
+          |
+          v
+   Lead Vehicle Model ---------> x_lead
+          |                         |
+          v                         v
+       v_lead                 Relative Distance
+                                  d_rel
+                                    |
+                                    v
+v_set -----> ACC Controller -----> a_cmd -----> Ego Vehicle Model
+                ^                                  |
+                |                                  +----> v_ego
+                +----------------------------------+----> x_ego
+```
 
-G(s) = 1 / (2s + 1)
-
----
-
-## PID 초기값
-
-P = 1
-
-I = 0
-
-D = 0
-
----
-
-## 결과
-
-차량 속도가 100 km/h에 안정적으로 수렴하는 것을 확인하였다.
-
-(Feature 2에서 PID를 추가 튜닝할 예정)
-
-# Feature 2 - Lead Vehicle Model
-
-## 목표
-
-앞차 속도를 추가하여 ACC의 기본 구조를 구현하였다.
+![ACC system architecture](images/system_architecture.png)
 
 ---
 
-## 추가된 블록
+## 3. Control Strategy
 
-- Constant (Lead Vehicle Speed)
-- Manual Switch
+### 3.1 Desired Following Distance
+
+The desired distance is calculated using a constant-time-headway policy:
+
+```text
+d_ref = d0 + T_gap * v_ego
+```
+
+Where:
+
+- `d0`: minimum standstill distance
+- `T_gap`: desired time gap
+- `v_ego`: ego-vehicle speed
+
+### 3.2 Speed Controller
+
+The speed controller tracks the selected cruising speed:
+
+```text
+e_speed = v_set - v_ego
+```
+
+A PI controller generates the speed-control acceleration command:
+
+```text
+a_speed = Kp_v * e_speed + Ki_v * integral(e_speed)
+```
+
+### 3.3 Distance Controller
+
+The distance error and relative velocity are defined as:
+
+```text
+e_gap = d_rel - d_ref
+v_rel = v_lead - v_ego
+```
+
+The distance-control command is:
+
+```text
+a_gap = Kp_d * e_gap + Kd_d * v_rel
+```
+
+### 3.4 Acceleration Command Selection
+
+The controller chooses the more conservative command:
+
+```text
+a_cmd = min(a_speed, a_gap)
+```
+
+The command is then limited by:
+
+```text
+a_min <= a_cmd <= a_max
+```
+
+This allows the ego vehicle to follow the selected speed when the road ahead is clear and to decelerate when the lead vehicle becomes too close.
 
 ---
 
-## 동작
+## 4. Default Parameters
 
-Switch 위
+| Parameter | Description | Default value |
+|---|---|---:|
+| `Ts` | Simulation step | 0.05 s |
+| `Tsim` | Simulation time | 60 s |
+| `v_ego0` | Initial ego speed | 20 m/s |
+| `x_lead0` | Initial lead position | 60 m |
+| `v_set` | Selected cruising speed | 25 m/s |
+| `d0` | Minimum distance | 10 m |
+| `T_gap` | Desired time gap | 1.5 s |
+| `a_max` | Maximum acceleration | 2.0 m/s² |
+| `a_min` | Maximum braking command | -4.0 m/s² |
 
-↓
-
-운전자 목표속도(100km/h)
-
-Switch 아래
-
-↓
-
-앞차 속도(80km/h)
-
----
-
-## 결과
-
-ACC가 운전자 속도와 앞차 속도 중 하나를 선택할 수 있는 기본 구조를 완성하였다.
-
-# Feature 3 - Distance Decision Logic
-
-## 목표
-
-앞차와의 거리를 이용하여 목표 속도를 자동으로 변경하도록 구현하였다.
+Controller gains are defined in `model/init_ACC.m`.
 
 ---
 
-## 사용 블록
+## 5. Lead-Vehicle Scenario
 
-- Constant (Distance)
-- Compare To Constant
-- Switch
-
----
-
-## 조건
-
-Distance < 30m
-
-↓
-
-Lead Vehicle Speed
-
-Distance ≥ 30m
-
-↓
-
-Driver Target Speed
+| Time interval | Lead-vehicle behavior |
+|---|---|
+| 0–10 s | Maintains 22 m/s |
+| 10–15 s | Decelerates from 22 m/s to 15 m/s |
+| 15–30 s | Maintains 15 m/s |
+| 30–35 s | Accelerates from 15 m/s to 25 m/s |
+| 35–45 s | Maintains 25 m/s |
+| 45–50 s | Decelerates from 25 m/s to 18 m/s |
+| 50–60 s | Maintains 18 m/s |
 
 ---
 
-## 결과
+## 6. Repository Structure
 
-거리 조건에 따라 목표 속도가 자동으로 변경되는 기본 ACC 판단 로직을 구현하였다.
-
-Feature4
-
-Signal Editor를 이용하여 앞차 거리가
-시간에 따라 변하는 시나리오를 구현하였다.
-
-## Feature 5
-
-### Signal Naming
-
-프로젝트의 가독성을 높이기 위해 주요 신호 이름을 지정하였다.
-
-Target_Speed
-
-Vehicle_Speed
-
-또한 Target Speed와 Vehicle Speed를 각각 Scope에서 확인할 수 있도록 구성하였다.
-
-## Feature 6
-
-### PID Tuning
-
-P Controller에서 PI Controller로 변경하였다.
-
-P = 0.8
-
-I = 0.2
-
-D = 0
-
-Vehicle Speed가 보다 부드럽게 목표속도에 수렴하도록 개선하였다.
-
-또한 Mux를 이용하여 Target Speed와 Vehicle Speed를 하나의 Scope에서 비교하였다.
-
-# Feature 7
-
-## ACC ON / OFF
-
-이번 기능에서는 운전자가 ACC를 사용할지 직접 운전할지를 선택할 수 있도록 Manual Switch를 추가하였다.
-
-### 구성
-
-Distance
-↓
-
-Compare (<30)
-
-↓
-
-Switch
-
-↓
-
-Target_Speed
-
-↓
-
-Manual Switch
-
-↓
-
-Sum
-
-↓
-
-PID
-
-↓
-
-Vehicle
-
-### 동작
-
-- Manual Switch ON
-  - ACC가 계산한 Target Speed 사용
-
-- Manual Switch OFF
-  - Driver Target Speed(100km/h) 사용
-
-이를 통해 ACC 사용 여부를 자유롭게 전환할 수 있도록 구성하였다.
+```text
+04_ACC_Project/
+├── model/
+│   ├── ACC_Project.slx
+│   └── init_ACC.m
+├── scripts/
+│   └── analyze_ACC_results.m
+├── images/
+│   ├── system_architecture.png
+│   ├── speed_response.png
+│   ├── distance_response.png
+│   ├── acceleration_response.png
+│   └── time_gap.png
+├── results/
+│   └── baseline_metrics.csv
+└── README.md
+```
 
 ---
 
-# Feature 8
+## 7. How to Run
 
-## Stateflow 준비
-
-다음 단계에서는 Manual Switch를 Stateflow가 자동으로 제어하도록 만들 예정이다.
-
-이번 Feature에서는 Stateflow Chart를 생성하고
-
-ACC_OFF
-
-↓
-
-ACC_ON
-
-상태를 설계하였다.
-
-현재는 Manual Switch가 동작하지만 다음 단계부터 Stateflow가 이를 대신하게 된다.
-
-# Feature 9
-
-## Stateflow 기반 ACC 상태 제어
-
-### 목적
-
-기존에는 Manual Switch를 직접 클릭하여 ACC를 ON/OFF하였다.
-
-실제 차량에서는 운전자 입력과 브레이크 입력을 기반으로 ACC가 자동으로 상태를 변경한다.
-
-이를 위해 Stateflow를 추가하였다.
+1. Open MATLAB and set the current folder to `04_ACC_Project`.
+2. Run `model/init_ACC.m`.
+3. Open `model/ACC_Project.slx`.
+4. Run the simulation.
+5. Run `scripts/analyze_ACC_results.m`.
+6. Check the generated figures in `images/` and performance metrics in `results/`.
 
 ---
 
-### 상태
+## 8. Simulation Results
 
-ACC_OFF
+### 8.1 Vehicle Speed Response
 
-ACC_ON
+![Vehicle speed response](images/speed_response.png)
 
----
+### 8.2 Relative and Desired Distance
 
-### 상태 전이
+![Distance response](images/distance_response.png)
 
-ACC_Button == 1
+### 8.3 Acceleration Command
 
-↓
+![Acceleration response](images/acceleration_response.png)
 
-ACC_ON
+### 8.4 Time Gap
 
-Brake == 1
-
-↓
-
-ACC_OFF
+![Time-gap response](images/time_gap.png)
 
 ---
 
-### 출력
+## 9. Baseline Performance Metrics
 
-ACC_Enable (Boolean)
+The analysis script automatically generates `results/baseline_metrics.csv`.
 
-ACC_OFF → false
-
-ACC_ON → true
-
-다음 Feature에서는 ACC_Enable을 Manual Switch와 연결하여 자동으로 ACC를 제어할 예정이다.
-
-# Feature 10
-
-## Stateflow와 속도 제어 연결
-
-기존 Manual Switch를 제거하고 일반 Switch를 사용하였다.
-
-Stateflow에서 생성한 ACC_Enable 신호를 이용하여
-
-ACC OFF
-
-→ Driver Target Speed
-
-ACC ON
-
-→ ACC Target Speed
-
-를 자동으로 선택하도록 구현하였다.
-
-이로써 운전자 입력 없이 ACC 상태에 따라 목표속도가 자동으로 변경된다.
-
-# Feature 11
-
-## Ego Vehicle Position Calculation
-
-### 목적
-
-Adaptive Cruise Control은 단순히 속도만 제어하는 시스템이 아니라 차량의 위치를 기반으로 앞차와의 상대거리를 계산한다.
-
-이번 Feature에서는 Ego Vehicle(자차)의 위치를 계산하였다.
+| Metric | Result |
+|---|---:|
+| Minimum relative distance | TBD |
+| Minimum time gap | TBD |
+| RMS distance error | TBD |
+| Maximum speed-tracking error | TBD |
+| Maximum acceleration | TBD |
+| Maximum deceleration | TBD |
+| Final speed error | TBD |
 
 ---
 
-### 구성
+## 10. Key Contributions
 
-Vehicle_Speed
-
-↓
-
-Integrator
-
-↓
-
-Ego_Position
+- Built a complete longitudinal ACC simulation model from scratch.
+- Implemented selected-speed tracking using a PI controller.
+- Implemented safe-distance control using distance error and relative speed.
+- Applied a constant-time-headway distance policy.
+- Limited acceleration and braking commands using saturation.
+- Designed a variable lead-vehicle speed scenario.
+- Automated result plotting and quantitative performance evaluation.
 
 ---
 
-### 동작원리
+## 11. Current Limitations
 
-차량 속도를 적분하면 이동거리가 계산된다.
-
-Position = ∫ Velocity dt
-
-이를 이용하여 자차의 위치(Ego Position)를 계산하였다.
-
----
-
-### 확인
-
-Vehicle Speed Scope
-
-↓
-
-속도 확인
-
-Ego Position Scope
-
-↓
-
-차량 위치가 시간에 따라 계속 증가하는 것을 확인
-
-# Feature 12
-
-## Lead Vehicle Position Calculation
-
-### 목적
-
-앞차의 위치를 계산하기 위해 Lead Vehicle Speed를 적분하였다.
-
-이를 통해 Ego Vehicle과 Lead Vehicle의 실제 상대거리를 계산할 준비를 완료하였다.
+- The ego vehicle is modeled as an ideal longitudinal point-mass system.
+- Sensor delay, sensor noise, road grade, aerodynamic drag, and actuator lag are not yet included.
+- The baseline controller uses minimum-command selection rather than an explicit mode state machine.
+- Emergency braking logic has not yet been implemented.
 
 ---
 
-### 구성
+## 12. Future Work
 
-Lead Vehicle Speed
-
-↓
-
-Integrator
-
-↓
-
-Lead_Position
-
-↓
-
-Scope
-
----
-
-### 원리
-
-Lead Vehicle의 속도를 적분하여 위치를 계산하였다.
-
-Lead Position = ∫ Lead Speed dt
-
-다음 Feature에서는
-
-Actual Distance
-
-=
-
-Lead Position
-
--
-
-Ego Position
-
-을 구현할 예정이다.
-# Feature 13
-
-## Actual Distance Calculation
-
-### 목적
-
-기존에는 Repeating Sequence를 이용하여
-앞차와의 거리를 가상으로 생성하였다.
-
-이번 Feature에서는
-
-Lead Position
-
--
-
-Ego Position
-
-을 이용하여 실제 상대거리를 계산하였다.
-
----
-
-### 구성
-
-Lead Speed
-
-↓
-
-Integrator
-
-↓
-
-Lead Position
-
-↓
-
-+
-
-↓
-
-Sum
-
-↓
-
-Actual Distance
-
-↑
-
--
-
-↓
-
-Ego Position
-
----
-
-### 계산식
-
-Actual Distance
-
-=
-
-Lead Position
-
--
-
-Ego Position
-
----
-
-### 확인
-
-Repeating Sequence
-
-↓
-
-가상거리
-
-Actual Distance
-
-↓
-
-실제 계산거리
-
-두 값을 비교하여
-
-향후 Repeating Sequence를 제거할 준비를 완료하였다.
+- Add `CRUISE`, `FOLLOWING`, and `EMERGENCY` mode logic using Stateflow.
+- Add emergency braking based on distance and time-to-collision.
+- Add acceleration-rate limits for improved ride comfort.
+- Add actuator delay and sensor noise.
+- Compare baseline and improved controller performance.
+- Add CAN-style signal interfaces and fault-handling logic.

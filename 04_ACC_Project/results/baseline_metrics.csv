@@ -1,0 +1,2 @@
+MinimumRelativeDistance_m,MinimumTimeGap_s,RMSDistanceError_m,MaximumSpeedError_mps,MaximumAcceleration_mps2,MaximumDeceleration_mps2,FinalSpeedError_mps
+60,3,651.743585545787,5,2,-0.0694836031686549,3.45770347784935e-05
