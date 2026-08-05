@@ -1,2 +1,2 @@
 MinimumRelativeDistance_m,MinimumTTC_s,RMSDistanceError_m,MaximumSpeedError_mps,MinimumAcceleration_mps2,MaximumAcceleration_mps2,CruiseDuration_s,FollowingDuration_s,EmergencyDuration_s,CollisionOccurred
-60,36.6730830039092,651.743585545787,5,-0.0694836031686549,2,60,0,0,0
+60,37.0968687740626,647.29315031786,5,2.1316282072803e-15,2,60,0,0,0
