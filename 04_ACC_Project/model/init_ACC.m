@@ -1,6 +1,10 @@
 %% ACC Project Initialization
-clearvars;
+
 clc;
+
+if ~exist("scenario_case", "var")
+    scenario_case = 1;
+end
 
 %% Simulation settings
 Ts   = 0.05;     % Simulation step [s]
@@ -36,14 +40,12 @@ a_emergency  = -6.0;  % Emergency 모드 감속 명령 [m/s^2]
 
 %% Lead Vehicle Scenario Selection
 
-scenario_case = 1;
-% 1: Normal ACC scenario
-% 2: Emergency braking scenario
-
 switch scenario_case
 
     case 1
         % Normal ACC scenario
+        x_lead0 = 60;
+
         leadTime = [
              0
             10
@@ -67,12 +69,14 @@ switch scenario_case
         ];
 
     case 2
-        % Emergency braking scenario
+        % Emergency braking test scenario
+        x_lead0 = 55;
+
         leadTime = [
              0
-            10
-            11
-            25
+             8
+             9
+            20
             60
         ];
 
@@ -85,7 +89,7 @@ switch scenario_case
         ];
 
     otherwise
-        error("scenario_case는 1 또는 2여야 합니다.");
+        error("scenario_case must be 1 or 2.");
 end
 
 v_lead_ts = timeseries(leadSpeed, leadTime);

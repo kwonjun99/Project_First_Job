@@ -21,3 +21,5 @@ codegen/
 *.asv
 *.m~
 *.mex*
+# MATLAB generated result data
+04_ACC_Project/results/*.mat
