@@ -414,3 +414,155 @@ FULL_BRAKE    -> -6.0 m/s²
 ```
 
 The open-loop collision at `5.000 s` will be used as the reference result for evaluating the final AEB controller.
+
+---
+
+# Development Log
+
+## Phase 1 — Open-Loop Vehicle Model ✅
+
+### Objective
+
+Validate the basic longitudinal vehicle model before implementing the AEB controller.
+
+### Implemented
+
+- Target Vehicle longitudinal position model
+- Ego Vehicle velocity and position model
+- Relative distance calculation
+- Closing speed calculation
+- Timeseries signal logging
+
+### Validation Scenario
+
+- Ego initial speed: 20 m/s
+- Target speed: 0 m/s
+- Initial relative distance: 100 m
+- Ego acceleration: 0 m/s²
+
+### Results
+
+```text
+Target speed range: 0.000 ~ 0.000 m/s
+Ego speed range: 20.000 ~ 20.000 m/s
+Closing speed range: 20.000 ~ 20.000 m/s
+Relative distance range: -60.000 ~ 100.000 m
+Open-loop collision: YES
+Collision time: 5.000 s
+
+
+Phase 2 — Time To Collision (TTC) Calculation ✅
+Objective
+
+Implement and validate the Time To Collision signal before connecting the AEB braking logic.
+
+TTC is calculated using relative distance and closing speed.
+
+TTC = d_rel / v_closing
+
+where:
+
+d_rel      = x_target - x_ego
+v_closing  = v_ego - v_target
+TTC Logic
+
+A MATLAB Function block was added to the Simulink model.
+
+function TTC = calculateTTC(d_rel, v_closing)
+%#codegen
+
+if d_rel <= 0
+
+    TTC = 0;
+
+elseif v_closing > 0.1
+
+    TTC = d_rel / v_closing;
+
+else
+
+    TTC = 99;
+
+end
+
+TTC = 99 s is used when the target is not being approached.
+
+This prevents division by zero and distinguishes low-risk conditions from approaching conditions.
+
+Added Signals
+d_rel ────────┐
+              ▼
+        TTC Calculation ──────> TTC
+              ▲                  │
+              │                  ├─> TTC Scope
+v_closing ────┘                  └─> ttc_log
+
+The TTC signal is stored as:
+
+ttc_log
+Save format: Timeseries
+Expected TTC
+
+For the baseline scenario:
+
+Initial distance = 100 m
+Closing speed    = 20 m/s
+
+Therefore:
+
+Time	Relative Distance	Expected TTC
+0 s	100 m	5 s
+1 s	80 m	4 s
+2 s	60 m	3 s
+3 s	40 m	2 s
+4 s	20 m	1 s
+5 s	0 m	0 s
+AEB Thresholds
+
+The initial AEB thresholds are defined as:
+
+TTC_warning = 4.0;
+TTC_partial = 3.0;
+TTC_full    = 2.0;
+
+This produces the following expected operating sequence:
+
+TTC > 4 s
+    ↓
+NORMAL
+
+TTC <= 4 s
+    ↓
+WARNING
+
+TTC <= 3 s
+    ↓
+PARTIAL_BRAKE
+
+TTC <= 2 s
+    ↓
+FULL_BRAKE
+
+Expected threshold-crossing times for the baseline scenario:
+
+WARNING       ≈ 1.0 s
+PARTIAL BRAKE ≈ 2.0 s
+FULL BRAKE    ≈ 3.0 s
+
+The TTC signal was verified before implementing Stateflow so that collision-risk detection and braking-control logic could be debugged independently.
+
+Phase 2 Result: PASS
+
+Next Step
+
+Implement the AEB operating-state logic using Stateflow:
+
+NORMAL
+   ↓
+WARNING
+   ↓
+PARTIAL_BRAKE
+   ↓
+FULL_BRAKE
+
+The next validation objective is to replace the open-loop collision at 5.000 s with automatic emergency braking.
