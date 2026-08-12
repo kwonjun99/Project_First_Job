@@ -162,6 +162,19 @@ for k = 1:numel(scenarioIds)
     dDes     = interpSignal(dDesTs,      t, 'linear');
     ttc      = interpSignal(ttcTs,       t, 'previous');
     mode     = round(interpSignal(modeTs, t, 'previous'));
+    %% Remove initial Stateflow initialization value
+
+firstValidModeIdx = find( ...
+    mode >= 1 & mode <= 4, ...
+    1, ...
+    'first');
+
+if ~isempty(firstValidModeIdx)
+
+    mode(1:firstValidModeIdx-1) = ...
+        mode(firstValidModeIdx);
+
+end
 
     aCruise  = interpSignal(aCruiseTs,   t, 'previous');
     aACC     = interpSignal(aACCTs,      t, 'previous');
