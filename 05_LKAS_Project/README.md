@@ -1,214 +1,239 @@
-# Lane Keeping Assist System with Gain-Scheduled Dual PID Control
+# Lane Keeping Assist System
 
-## 1. Project Overview
+### Dual PID & Stateflow Gain Scheduling
 
-본 프로젝트는 MATLAB/Simulink 및 Stateflow를 이용하여 구현한 Lane Keeping Assist System(LKAS) 프로젝트입니다.
+MATLAB/Simulink와 Stateflow를 이용해 차량이 차선 중앙을 따라 주행하도록 하는 **LKAS(Lane Keeping Assistance System)**를 구현한 대학 수업 팀 프로젝트다.
 
-차량의 횡방향 편차와 상대 요각 오차를 각각 PID 제어하고, 두 제어 출력을 결합하여 최종 조향각 명령을 생성합니다.
-
-또한 차량의 전역 위치와 주행 구간을 Stateflow에서 판단하여 목표 종방향 속도와 PID 게인을 변경하는 Gain Scheduling 제어 구조를 구현하였습니다.
+카메라 기반 Lane Boundary 정보에서 차량의 **Lateral Offset과 Relative Yaw Angle**을 계산하고, 두 오차를 각각 PID Controller로 제어해 최종 Steering Angle을 생성하도록 구성했다.
 
 ---
 
-## 2. Development Environment
+## 1. 프로젝트 개요
 
-- MATLAB R2024b
-- Simulink
-- Stateflow
-- Control System Toolbox
-- Simulink Control Design
+* **구분:** University Team Project
+* **주제:** Lane Keeping Assistance System
+* **개발 환경:** MATLAB / Simulink / Stateflow
+* **주요 제어:** Lateral PID + Yaw PID
+* **주요 검증 항목:** Lateral Offset / Yaw Error / Steering Angle
+* **시나리오:** 직선, S-Curve, 좌우회전, U-Turn 등
 
----
-
-## 3. System Architecture
-
-제어기는 다음 입력을 사용합니다.
-
-| Signal | Description |
-|---|---|
-| `lateral_deviation` | 차선 중심과 차량 사이의 횡방향 편차 |
-| `relative_yaw_angle` | 차량 방향과 차선 기준 방향 사이의 상대 요각 |
-| `V_x` | 차량 종방향 속도 |
-| `X` | 차량의 전역 X 좌표 |
-| `Y` | 차량의 전역 Y 좌표 |
-
-주요 출력은 다음과 같습니다.
-
-| Signal | Description |
-|---|---|
-| `Steering_Angle` | 최종 조향각 명령 |
-| `Longitudinal_Velocity` | Stateflow가 결정한 목표 종방향 속도 |
-
-전체 제어 흐름은 다음과 같습니다.
+전체 시스템 흐름은 다음과 같다.
 
 ```text
-Vehicle Position (X, Y)
-        |
-        v
+Driving Scenario
+      ↓
+Lane Sensor Data
+      ↓
+Error Calculator
+      ↓
+Lateral Offset / Yaw Error
+      ↓
+Dual PID Controller
+      ↓
 Stateflow Gain Scheduling
-        |
-        +---- Lateral PID Gains
-        +---- Yaw PID Gains
-        +---- Target Velocity
-
-Lateral Deviation ---> Lateral PID ----+
-                                       +---> Saturation ---> Steering Angle
-Relative Yaw Angle --> Yaw PID --------+
-```
-
-![Controller Architecture](images/controller_architecture.png)
-
----
-
-## 4. Lateral Control
-
-횡방향 편차를 줄이기 위해 PID 제어기를 구성하였습니다.
-
-```text
-e_y
- |
- +--> Kp_lat * e_y
- |
- +--> Ki_lat * integral(e_y)
- |
- +--> Kd_lat * derivative(e_y)
- |
- v
-Lateral Control Output
-```
-
-PID 출력에는 차량 속도에 따라 계산되는 Gain Factor를 적용하여 속도 변화에 따른 조향 민감도를 조정하였습니다.
-
-![Lateral PID](images/lateral_pid.png)
-
----
-
-## 5. Yaw Angle Control
-
-차량 진행 방향과 차선 방향 사이의 상대 요각 오차를 줄이기 위해 별도의 PID 제어기를 구성하였습니다.
-
-```text
-e_psi
- |
- +--> Kp_yaw * e_psi
- |
- +--> Ki_yaw * integral(e_psi)
- |
- +--> Kd_yaw * derivative(e_psi)
- |
- v
-Yaw Control Output
-```
-
-Lateral PID와 Yaw PID의 출력을 합산한 후 Saturation을 적용하여 최종 조향각을 생성합니다.
-
-![Yaw PID](images/yaw_pid.png)
-
----
-
-## 6. Gain Scheduling with Stateflow
-
-Stateflow는 차량의 현재 위치 `X`, `Y`를 이용하여 주행 구간을 판별합니다.
-
-각 상태에서는 다음 파라미터를 변경합니다.
-
-- Target longitudinal velocity
-- Lateral PID gains
-- Yaw PID gains
-
-확인된 주행 상태는 다음과 같습니다.
-
-| State | Target Velocity |
-|---|---:|
-| `Speed_15` | 15 km/h |
-| `Speed_20` | 20 km/h |
-| `Speed_30` | 30 km/h |
-| `Speed_50` | 50 km/h |
-
-상태 전환은 `check_position()` 함수를 이용해 차량이 지정된 좌표와 허용 반경 내에 도달했는지를 판단하여 수행합니다.
-
-![Stateflow Gain Scheduling](images/stateflow_gain_scheduling.png)
-
----
-
-## 7. Steering Command
-
-최종 조향각은 다음과 같이 생성됩니다.
-
-```text
+      ↓
 Steering Angle
-=
-Lateral PID Output
-+
-Yaw PID Output
+      ↓
+Lateral Vehicle Model
 ```
 
-합산된 조향 명령에는 Saturation을 적용하여 과도한 조향 입력을 제한합니다.
+---
+
+## 2. 프로젝트 구조
+
+```text
+05_LKAS_Project/
+├── README.md
+│
+├── model/
+│   ├── LKAS_Project.slx
+│   └── LKAS_Project_Scenario.mat
+│
+├── scripts/
+│   ├── init_LKAS.m
+│   └── export_LKAS_result.m
+│
+├── Images/
+│   ├── Result/
+│   ├── Scenario/
+│   └── Simulink Model/
+│
+├── results/
+│   └── lkas_metrics.csv
+│
+├── docs/
+│   └── LKAS 최종 1.pdf
+│
+└── provided/
+    └── esp_control.c
+```
 
 ---
 
-## 8. Simulation Results
+## 3. Lateral Vehicle Model
 
-다음 항목을 이용하여 LKAS 성능을 평가합니다.
+차량의 횡방향 거동을 표현하기 위해 Bicycle Model 기반의 횡방향 차량 모델을 사용했다.
 
-- Lateral deviation
-- Relative yaw angle
-- Steering angle
-- Longitudinal velocity
-- Vehicle trajectory
+주요 차량 파라미터:
 
-### 8.1 Lateral Deviation
+```text
+Vehicle Mass        : 2045 kg
+Yaw Inertia         : 5428 kg·m²
+Front CG Distance   : 1.488 m
+Rear CG Distance    : 1.712 m
+Front Cornering Stiffness : 38925 N/rad
+Rear Cornering Stiffness  : 38255 N/rad
+Control Period      : 0.1 s
+```
 
-![Lateral Error](images/lateral_error.png)
-
-### 8.2 Relative Yaw Angle
-
-![Yaw Error](images/yaw_error.png)
-
-### 8.3 Steering Angle
-
-![Steering Angle](images/steering_angle.png)
-
-### 8.4 Longitudinal Velocity
-
-![Longitudinal Velocity](images/longitudinal_velocity.png)
-
-### 8.5 Vehicle Path
-
-![Vehicle Path](images/vehicle_path.png)
+차량 동역학 모델과 ESP Controller 일부는 수업에서 제공된 모델을 활용했고, 이를 기반으로 LKAS 제어 로직과 시나리오를 구성했다.
 
 ---
 
-## 9. Performance Metrics
+## 4. Error Calculator
 
-| Metric | Result |
-|---|---:|
-| Maximum lateral deviation | TBD |
-| RMS lateral deviation | TBD |
-| Maximum relative yaw error | TBD |
-| Maximum steering angle | TBD |
-| Steady-state lateral error | TBD |
+Driving Scenario의 Lane Boundary 정보를 이용해 차량의 차선 중심 기준 오차를 계산했다.
 
-결과값은 시뮬레이션 로그 분석 후 업데이트할 예정입니다.
+주요 제어 오차:
 
----
+```text
+Lateral Offset
+→ 차량이 차선 중앙으로부터 얼마나 벗어났는지 계산
 
-## 10. Key Contributions
+Relative Yaw Angle
+→ 차량 진행 방향과 차선 방향의 차이 계산
+```
 
-- Lateral deviation 및 yaw angle을 이용한 병렬 복합 PID 제어 구현
-- Stateflow 기반 위치별 목표 속도 및 PID Gain Scheduling
-- 차량 속도 기반 Gain Factor 적용
-- Steering Angle Saturation 적용
-- 차량 위치 기반 주행 시나리오 전환 구현
+좌·우 Lane Boundary 데이터를 이용해 차선 중심을 계산하고 이를 차량 위치와 비교해 횡방향 오차를 생성했다.
 
 ---
 
-## 11. Limitations and Future Work
+## 5. Dual PID Controller
 
-- PID 적분기 Anti-windup 적용
-- Steering rate limit 추가
-- 미분항 Low-pass filter 적용
-- Stateflow 좌표 및 PID 게인의 외부 파라미터화
-- 직선 및 곡선 구간별 정량적 성능 비교
-- 차량 경로 Animation 및 GIF 생성
-- CAN 신호 기반 제어기 인터페이스 확장
+LKAS Controller는 두 개의 PID Controller로 구성했다.
+
+```text
+Lateral Offset
+      ↓
+Lateral PID
+      │
+      ├──────────┐
+                 ▼
+          Steering Command
+                 ▲
+      ┌──────────┘
+      │
+Yaw Error
+      ↓
+Yaw PID
+```
+
+Lateral PID는 차량의 횡방향 위치 오차를 줄이고, Yaw PID는 차량의 진행 방향을 차선 방향과 일치시키는 역할을 한다.
+
+두 제어 결과를 종합해 최종 Steering Angle을 생성했다.
+
+---
+
+## 6. Stateflow & Gain Scheduling
+
+도로 형상과 차량 속도에 따라 같은 PID Gain만 사용할 경우 제어 성능이 달라질 수 있어 Stateflow를 이용해 Gain을 조정했다.
+
+프로젝트에서는 다음과 같은 구간을 기준으로 PID Gain을 튜닝했다.
+
+```text
+Straight        : 약 30 km/h
+S-Curve         : 약 25 km/h
+Left/Right Turn : 약 20 km/h
+U-Turn          : 약 15 km/h
+```
+
+각 구간에서 시뮬레이션 Scope를 확인하면서 PID Gain을 조정하고 이전 결과와 비교하는 방식으로 튜닝했다.
+
+---
+
+## 7. 시뮬레이션 결과
+
+기존 프로젝트 결과:
+
+```text
+Lateral Offset
+Maximum : +10.67 cm
+Minimum : -13.64 cm
+
+Yaw Error
+Maximum : +5.53 deg
+Minimum : -4.64 deg
+
+Steering Angle
+Maximum : +7.94 deg
+Minimum : -6.27 deg
+```
+
+횡방향 편차는 약 **±14 cm 이내**로 유지됐으며, Steering Angle도 약 **±8° 이내**에서 제어됐다.
+
+Yaw Error는 대부분 ±5° 근처에서 유지됐지만 일부 구간에서는 최대 약 `+5.53°`까지 증가했다.
+
+복합 곡선 구간에서 단순 PID 기반 제어의 한계가 나타났으며, 이를 통해 속도와 도로 곡률에 따라 제어기 Gain 조정이 필요하다는 점을 확인했다.
+
+---
+
+## 8. 결과 이미지
+
+기존 프로젝트에서 저장한 Simulink 모델, Scenario 및 결과 이미지를 사용했다.
+
+```text
+Images/
+├── Result/
+├── Scenario/
+└── Simulink Model/
+```
+
+주요 결과는 다음 신호를 중심으로 확인했다.
+
+* Lateral Offset
+* Relative Yaw Angle
+* Steering Angle
+* 차량 주행 궤적
+* Stateflow / Gain Scheduling
+* S-Curve Tuning 전후 결과
+
+---
+
+## 9. 한계점
+
+프로젝트 진행 과정에서 다음과 같은 한계를 확인했다.
+
+* 고속 주행 구간 검증 부족
+* 복잡한 곡률에서 PID 성능 저하
+* Clothoid Curve 미적용
+* 센서 노이즈 및 인식 지연 단순화
+* 기상 및 조도 조건 미반영
+* 실제 차량 검증 미수행
+
+향후에는 Gain Scheduling 고도화 또는 MPC와 같은 예측 제어 방식 적용을 고려할 수 있다.
+
+---
+
+## 10. 프로젝트에서 배운 점
+
+이 프로젝트를 통해 종방향 제어와 다른 **차량 횡방향 제어 구조**를 경험했다.
+
+특히:
+
+```text
+Lane Detection
+↓
+Error Calculation
+↓
+Lateral / Yaw Control
+↓
+Steering Command
+↓
+Vehicle Response
+```
+
+흐름을 Simulink로 구성하면서 차선 유지 제어의 기본 구조를 이해할 수 있었다.
+
+또한 하나의 PID Gain만 사용하는 것보다 차량 속도와 도로 형태에 따라 Gain을 조정하는 것이 중요하다는 점을 시뮬레이션을 통해 확인했다.
+
+이 프로젝트는 이후 진행한 ACC, AEB, Integrated Vehicle Control 프로젝트와 함께 횡방향 및 종방향 차량 제어 경험을 보여주는 수업 프로젝트로 정리했다.

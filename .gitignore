@@ -24,3 +24,4 @@ codegen/
 # MATLAB generated result data
 04_ACC_Project/results/*.mat
 06_AEB_Project/results/*.mat
+echo "*.mp4" >> .gitignore
